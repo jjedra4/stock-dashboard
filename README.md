@@ -1,3 +1,3 @@
 ## Simple MLOps project. 
 ### Goals:
-	-model deployment on BenroML
+	-model deployment on BentoML
