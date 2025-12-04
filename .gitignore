@@ -12,7 +12,6 @@ venv/
 
 .DS_Store
 
-data/
 model/logs.log
 
 .vscode/
