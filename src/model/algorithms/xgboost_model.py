@@ -6,19 +6,33 @@ import numpy as np
 class XGBoostModel(BaseModel):
     def __init__(self, **params):
         self.params = params
-        self.model = xgb.XGBRegressor(**self.params)
+        self.model = None  # To be trained
 
     def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> None:
-        X_train = self._prepare_data(X_train, y_train)
-        self.model.fit(X_train)
+        dtrain = self._prepare_data(X_train, y_train)
+        
+        # Separate n_estimators from other params
+        train_params = self.params.copy()
+        num_boost_round = train_params.pop("n_estimators", 100)
+        
+        self.model = xgb.train(
+            params=train_params,
+            dtrain=dtrain,
+            num_boost_round=num_boost_round
+        )
 
     def predict(self, X: pd.DataFrame) -> pd.Series:
-        return self.model.predict(X)
+        if X.shape[0] < 30:
+            raise ValueError("X must have at least 30 rows due to rolling windows")
+        
+        dtest = self._prepare_data(X)
+        return self.model.predict(dtest)
 
     def save(self, path: str) -> None:
         self.model.save_model(path)
 
     def load(self, path: str) -> None:
+        self.model = xgb.Booster()
         self.model.load_model(path)
 
     def _prepare_data(self, X: pd.DataFrame, y: pd.Series = None) -> tuple[xgb.DMatrix, xgb.DMatrix]:
