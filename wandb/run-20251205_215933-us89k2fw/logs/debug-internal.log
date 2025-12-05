@@ -1,0 +1,12 @@
+{"time":"2025-12-05T21:59:33.53786+01:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-05T21:59:33.873601+01:00","level":"INFO","msg":"stream: created new stream","id":"us89k2fw"}
+{"time":"2025-12-05T21:59:33.873692+01:00","level":"INFO","msg":"handler: started","stream_id":"us89k2fw"}
+{"time":"2025-12-05T21:59:33.87395+01:00","level":"INFO","msg":"writer: started","stream_id":"us89k2fw"}
+{"time":"2025-12-05T21:59:33.873962+01:00","level":"INFO","msg":"stream: started","id":"us89k2fw"}
+{"time":"2025-12-05T21:59:33.873993+01:00","level":"INFO","msg":"sender: started","stream_id":"us89k2fw"}
+{"time":"2025-12-05T21:59:36.130517+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-12-05T21:59:36.372597+01:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-12-05T21:59:36.376794+01:00","level":"INFO","msg":"stream: closing","id":"us89k2fw"}
+{"time":"2025-12-05T21:59:36.376821+01:00","level":"INFO","msg":"handler: closed","stream_id":"us89k2fw"}
+{"time":"2025-12-05T21:59:36.376902+01:00","level":"INFO","msg":"sender: closed","stream_id":"us89k2fw"}
+{"time":"2025-12-05T21:59:36.376916+01:00","level":"INFO","msg":"stream: closed","id":"us89k2fw"}

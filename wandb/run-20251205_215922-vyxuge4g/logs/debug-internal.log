@@ -1,0 +1,12 @@
+{"time":"2025-12-05T21:59:22.078281+01:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-05T21:59:22.358061+01:00","level":"INFO","msg":"stream: created new stream","id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:22.358108+01:00","level":"INFO","msg":"handler: started","stream_id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:22.358306+01:00","level":"INFO","msg":"stream: started","id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:22.358306+01:00","level":"INFO","msg":"writer: started","stream_id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:22.358318+01:00","level":"INFO","msg":"sender: started","stream_id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:23.797202+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-12-05T21:59:24.156296+01:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-12-05T21:59:24.160732+01:00","level":"INFO","msg":"stream: closing","id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:24.160765+01:00","level":"INFO","msg":"handler: closed","stream_id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:24.160919+01:00","level":"INFO","msg":"sender: closed","stream_id":"vyxuge4g"}
+{"time":"2025-12-05T21:59:24.160941+01:00","level":"INFO","msg":"stream: closed","id":"vyxuge4g"}

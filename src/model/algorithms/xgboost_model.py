@@ -8,8 +8,11 @@ class XGBoostModel(BaseModel):
         self.params = params
         self.model = None  # To be trained
 
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs) -> None:
-        dtrain = self._prepare_data(X_train, y_train)
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series = None, **kwargs) -> None:
+        # If y_train is passed but we want to calculate it internally, we ignore it or use it?
+        # The new design prefers internal calculation for XGBoost.
+        # We'll update the signature to accept y_train (for compatibility) but ignore it if not needed.
+        dtrain = self._prepare_data(X_train, train=True)
         
         # Separate n_estimators from other params
         train_params = self.params.copy()
@@ -25,7 +28,7 @@ class XGBoostModel(BaseModel):
         if X.shape[0] < 30:
             raise ValueError("X must have at least 30 rows due to rolling windows")
         
-        dtest = self._prepare_data(X)
+        dtest = self._prepare_data(X, train=False)
         return self.model.predict(dtest)
 
     def save(self, path: str) -> None:
@@ -35,7 +38,7 @@ class XGBoostModel(BaseModel):
         self.model = xgb.Booster()
         self.model.load_model(path)
 
-    def _prepare_data(self, X: pd.DataFrame, y: pd.Series = None) -> tuple[xgb.DMatrix, xgb.DMatrix]:
+    def _prepare_data(self, X: pd.DataFrame, train: bool = True) -> xgb.DMatrix:
         df = X.copy()
         price_col = 'adjClose' if 'adjClose' in df.columns else 'close'
         # --- FEATURE ENGINEERING ---
@@ -93,6 +96,9 @@ class XGBoostModel(BaseModel):
             df['month_sin'] = np.sin(2 * np.pi * df.index.month / 12)
             df['month_cos'] = np.cos(2 * np.pi * df.index.month / 12)
 
+        # --- CALCULATE TARGET (Before cleanup) ---
+        df['target'] = np.log(df[price_col].shift(-1) / df[price_col])
+
         # --- CLEANUP ---
         
         # Drop raw non-stationary columns and metadata
@@ -103,25 +109,18 @@ class XGBoostModel(BaseModel):
         ]
         # Only drop columns that actually exist in the dataframe
         df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
-
-        # Drop NaN values created by rolling windows and lags
-        # (This will remove the first ~20 rows of data)
-        df_clean = df.dropna()
-
-        # --- TARGET PREPARATION ---
         
-        if y is None:
-            return xgb.DMatrix(df_clean)
+        if train:
+            df_clean = df.dropna()
+            y = df_clean['target']
+            X_clean = df_clean.drop(columns=['target'])
+            return xgb.DMatrix(X_clean, label=y)
         else:
-            y_aligned = y.loc[df_clean.index]
-            current_prices = X.loc[df_clean.index, price_col]
-
-            y_transformed = np.log(y_aligned / current_prices)
+            # For prediction, we don't care about target NaN, but we care about feature NaNs (start of DF)
+            # So we dropna subset of features, but keep rows where target is NaN
+            feature_cols = [c for c in df.columns if c != 'target']
+            df_clean = df.dropna(subset=feature_cols)
             
-            valid_mask = df_clean.notna().all(axis=1) & y_transformed.notna()
-            
-            # Apply mask to X and y so we don't pass any NaN values to the DMatrix
-            X_clean = df_clean.loc[valid_mask]
-            y_clean = y_transformed.loc[valid_mask]
-
-            return xgb.DMatrix(X_clean, label=y_clean)
+            # Drop target col if it exists
+            X_clean = df_clean.drop(columns=['target'], errors='ignore')
+            return xgb.DMatrix(X_clean)

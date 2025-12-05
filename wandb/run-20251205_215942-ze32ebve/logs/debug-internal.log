@@ -1,0 +1,12 @@
+{"time":"2025-12-05T21:59:42.349014+01:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-05T21:59:42.633828+01:00","level":"INFO","msg":"stream: created new stream","id":"ze32ebve"}
+{"time":"2025-12-05T21:59:42.633878+01:00","level":"INFO","msg":"handler: started","stream_id":"ze32ebve"}
+{"time":"2025-12-05T21:59:42.634047+01:00","level":"INFO","msg":"stream: started","id":"ze32ebve"}
+{"time":"2025-12-05T21:59:42.634054+01:00","level":"INFO","msg":"sender: started","stream_id":"ze32ebve"}
+{"time":"2025-12-05T21:59:42.634047+01:00","level":"INFO","msg":"writer: started","stream_id":"ze32ebve"}
+{"time":"2025-12-05T21:59:44.438733+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-12-05T21:59:44.80787+01:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-12-05T21:59:44.812538+01:00","level":"INFO","msg":"stream: closing","id":"ze32ebve"}
+{"time":"2025-12-05T21:59:44.812576+01:00","level":"INFO","msg":"handler: closed","stream_id":"ze32ebve"}
+{"time":"2025-12-05T21:59:44.812667+01:00","level":"INFO","msg":"sender: closed","stream_id":"ze32ebve"}
+{"time":"2025-12-05T21:59:44.812684+01:00","level":"INFO","msg":"stream: closed","id":"ze32ebve"}

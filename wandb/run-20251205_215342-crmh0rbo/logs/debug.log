@@ -1,0 +1,21 @@
+2025-12-05 21:53:42,866 INFO    MainThread:49514 [wandb_init.py:setup_run_log_directory():714] Logging user logs to /Users/brader/Desktop/stock-dashboard/wandb/run-20251205_215342-crmh0rbo/logs/debug.log
+2025-12-05 21:53:42,867 INFO    MainThread:49514 [wandb_init.py:setup_run_log_directory():715] Logging internal logs to /Users/brader/Desktop/stock-dashboard/wandb/run-20251205_215342-crmh0rbo/logs/debug-internal.log
+2025-12-05 21:53:42,867 INFO    MainThread:49514 [wandb_init.py:init():841] calling init triggers
+2025-12-05 21:53:42,867 INFO    MainThread:49514 [wandb_init.py:init():846] wandb.init called with sweep_config: {}
+config: {'n_estimators': 977, 'max_depth': 10, 'learning_rate': 0.09718727702528092, 'subsample': 0.5097277780439434, 'colsample_bytree': 0.7982370615716976, 'reg_alpha': 9.800908217231214, 'reg_lambda': 6.804241195202015, '_wandb': {}}
+2025-12-05 21:53:42,867 INFO    MainThread:49514 [wandb_init.py:init():889] starting backend
+2025-12-05 21:53:42,867 INFO    MainThread:49514 [wandb_init.py:init():892] sending inform_init request
+2025-12-05 21:53:42,868 INFO    MainThread:49514 [wandb_init.py:init():900] backend started and connected
+2025-12-05 21:53:42,874 INFO    MainThread:49514 [wandb_init.py:init():970] updated telemetry
+2025-12-05 21:53:42,897 INFO    MainThread:49514 [wandb_init.py:init():994] communicating run to backend with 90.0 second timeout
+2025-12-05 21:53:43,479 INFO    MainThread:49514 [wandb_init.py:init():1041] starting run threads in backend
+2025-12-05 21:53:43,566 INFO    MainThread:49514 [wandb_run.py:_console_start():2521] atexit reg
+2025-12-05 21:53:43,566 INFO    MainThread:49514 [wandb_run.py:_redirect():2369] redirect: wrap_raw
+2025-12-05 21:53:43,566 INFO    MainThread:49514 [wandb_run.py:_redirect():2438] Wrapping output streams.
+2025-12-05 21:53:43,566 INFO    MainThread:49514 [wandb_run.py:_redirect():2461] Redirects installed.
+2025-12-05 21:53:43,567 INFO    MainThread:49514 [wandb_init.py:init():1081] run started, returning control to user process
+2025-12-05 21:53:44,655 INFO    MainThread:49514 [wandb_run.py:_finish():2287] finishing run brader-agh/stock-dashboard/crmh0rbo
+2025-12-05 21:53:44,655 INFO    MainThread:49514 [wandb_run.py:_atexit_cleanup():2486] got exitcode: 0
+2025-12-05 21:53:44,655 INFO    MainThread:49514 [wandb_run.py:_restore():2468] restore
+2025-12-05 21:53:44,655 INFO    MainThread:49514 [wandb_run.py:_restore():2474] restore done
+2025-12-05 21:53:45,723 INFO    MainThread:49514 [wandb_run.py:_footer_sync_info():3862] logging synced files

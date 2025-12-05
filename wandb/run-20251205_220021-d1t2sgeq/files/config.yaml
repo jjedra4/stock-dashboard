@@ -1,0 +1,75 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        e:
+            9497vuj0h9fj4xw0qtlpsw71t9h3kuei:
+                apple:
+                    ecpuCores: 4
+                    gpuCores: 8
+                    memoryGb: 8
+                    name: Apple M2
+                    pcpuCores: 4
+                    ramTotalBytes: "8589934592"
+                    swapTotalBytes: "7516192768"
+                cpu_count: 8
+                cpu_count_logical: 8
+                disk:
+                    /:
+                        total: "245107195904"
+                        used: "210253156352"
+                email: jan.batman4@gmail.com
+                executable: /Users/brader/Desktop/stock-dashboard/venv/bin/python
+                git:
+                    commit: c814c723c1e3b4c8c4c1869bfab79c4aad71bdbd
+                    remote: https://github.com/jjedra4/stock-dashboard.git
+                host: Jans-MacBook-Air.local
+                memory:
+                    total: "8589934592"
+                os: macOS-15.0.1-arm64-arm-64bit-Mach-O
+                program: -m src.model.tuning
+                python: CPython 3.13.2
+                root: /Users/brader/Desktop/stock-dashboard
+                startedAt: "2025-12-05T21:00:21.417948Z"
+                writerId: 9497vuj0h9fj4xw0qtlpsw71t9h3kuei
+        m: []
+        python_version: 3.13.2
+        t:
+            "1":
+                - 1
+                - 5
+                - 6
+                - 8
+                - 35
+                - 53
+                - 105
+            "2":
+                - 1
+                - 5
+                - 6
+                - 8
+                - 35
+                - 53
+                - 105
+            "3":
+                - 2
+                - 16
+            "4": 3.13.2
+            "5": 0.23.1
+            "10":
+                - 20
+            "12": 0.23.1
+            "13": darwin-arm64
+colsample_bytree:
+    value: 0.869215409777767
+learning_rate:
+    value: 0.0032828086905273618
+max_depth:
+    value: 14
+n_estimators:
+    value: 558
+reg_alpha:
+    value: 5.52801106124446
+reg_lambda:
+    value: 8.87212575535218
+subsample:
+    value: 0.7171869222524903

@@ -1,0 +1,93 @@
+[33m[W 2025-12-05 21:48:23,500][0m Trial 0 failed with parameters: {'n_estimators': 267, 'max_depth': 9, 'learning_rate': 0.015453483031318004, 'subsample': 0.978522320026539, 'colsample_bytree': 0.5502872000396324, 'reg_alpha': 5.885680613995586, 'reg_lambda': 6.554212058872897} because of the following error: ValueError('Found input variables with inconsistent numbers of samples: [200, 171]').[0m
+Traceback (most recent call last):
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/_optimize.py"[0m, line [35m205[0m, in [35m_run_trial[0m
+    value_or_values = func(trial)
+  File [35m"/Users/brader/Desktop/stock-dashboard/src/model/tuning.py"[0m, line [35m74[0m, in [35mobjective[0m
+    rmse = np.sqrt([31mmean_squared_error[0m[1;31m(y_val_log_ret, preds)[0m)
+                   [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/utils/_param_validation.py"[0m, line [35m218[0m, in [35mwrapper[0m
+    return func(*args, **kwargs)
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py"[0m, line [35m580[0m, in [35mmean_squared_error[0m
+    [31m_check_reg_targets_with_floating_dtype[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31my_true, y_pred, sample_weight, multioutput, xp=xp[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py"[0m, line [35m209[0m, in [35m_check_reg_targets_with_floating_dtype[0m
+    y_type, y_true, y_pred, sample_weight, multioutput = [31m_check_reg_targets[0m[1;31m([0m
+                                                         [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31my_true, y_pred, sample_weight, multioutput, dtype=dtype_name, xp=xp[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py"[0m, line [35m114[0m, in [35m_check_reg_targets[0m
+    [31mcheck_consistent_length[0m[1;31m(y_true, y_pred, sample_weight)[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/utils/validation.py"[0m, line [35m473[0m, in [35mcheck_consistent_length[0m
+    raise ValueError(
+    ...<2 lines>...
+    )
+[1;35mValueError[0m: [35mFound input variables with inconsistent numbers of samples: [200, 171][0m
+[33m[W 2025-12-05 21:48:23,505][0m Trial 0 failed with value None.[0m
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/brader/Desktop/stock-dashboard/src/model/tuning.py", line 104, in <module>
+    best_params = tuner.run()
+  File "/Users/brader/Desktop/stock-dashboard/src/model/tuning.py", line 90, in run
+    study.optimize(self.objective, n_trials=self.n_trials)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/study.py", line 490, in optimize
+    _optimize(
+    ~~~~~~~~~^
+        study=self,
+        ^^^^^^^^^^^
+    ...<7 lines>...
+        show_progress_bar=show_progress_bar,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/_optimize.py", line 67, in _optimize
+    _optimize_sequential(
+    ~~~~~~~~~~~~~~~~~~~~^
+        study,
+        ^^^^^^
+    ...<8 lines>...
+        progress_bar=progress_bar,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/_optimize.py", line 164, in _optimize_sequential
+    frozen_trial_id = _run_trial(study, func, catch)
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/_optimize.py", line 262, in _run_trial
+    raise func_err
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/optuna/study/_optimize.py", line 205, in _run_trial
+    value_or_values = func(trial)
+  File "/Users/brader/Desktop/stock-dashboard/src/model/tuning.py", line 74, in objective
+    rmse = np.sqrt(mean_squared_error(y_val_log_ret, preds))
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/utils/_param_validation.py", line 218, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py", line 580, in mean_squared_error
+    _check_reg_targets_with_floating_dtype(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        y_true, y_pred, sample_weight, multioutput, xp=xp
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py", line 209, in _check_reg_targets_with_floating_dtype
+    y_type, y_true, y_pred, sample_weight, multioutput = _check_reg_targets(
+                                                         ~~~~~~~~~~~~~~~~~~^
+        y_true, y_pred, sample_weight, multioutput, dtype=dtype_name, xp=xp
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/metrics/_regression.py", line 114, in _check_reg_targets
+    check_consistent_length(y_true, y_pred, sample_weight)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/brader/Desktop/stock-dashboard/venv/lib/python3.13/site-packages/sklearn/utils/validation.py", line 473, in check_consistent_length
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Found input variables with inconsistent numbers of samples: [200, 171]

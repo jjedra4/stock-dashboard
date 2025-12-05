@@ -1,0 +1,59 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        e:
+            1c76wv2ezhqp0dcwczngz4oea309exbu:
+                email: jan.batman4@gmail.com
+                executable: /Users/brader/Desktop/stock-dashboard/venv/bin/python
+                git:
+                    commit: c814c723c1e3b4c8c4c1869bfab79c4aad71bdbd
+                    remote: https://github.com/jjedra4/stock-dashboard.git
+                host: Jans-MacBook-Air.local
+                os: macOS-15.0.1-arm64-arm-64bit-Mach-O
+                program: -m src.model.tuning
+                python: CPython 3.13.2
+                root: /Users/brader/Desktop/stock-dashboard
+                startedAt: "2025-12-05T21:01:30.572950Z"
+                writerId: 1c76wv2ezhqp0dcwczngz4oea309exbu
+        m: []
+        python_version: 3.13.2
+        t:
+            "1":
+                - 1
+                - 5
+                - 6
+                - 8
+                - 35
+                - 53
+                - 105
+            "2":
+                - 1
+                - 5
+                - 6
+                - 8
+                - 35
+                - 53
+                - 105
+            "3":
+                - 2
+                - 16
+            "4": 3.13.2
+            "5": 0.23.1
+            "10":
+                - 20
+            "12": 0.23.1
+            "13": darwin-arm64
+colsample_bytree:
+    value: 0.9106012930365444
+learning_rate:
+    value: 0.002058532560404683
+max_depth:
+    value: 9
+n_estimators:
+    value: 495
+reg_alpha:
+    value: 4.935294379984712
+reg_lambda:
+    value: 9.569820535173381
+subsample:
+    value: 0.759325013181433

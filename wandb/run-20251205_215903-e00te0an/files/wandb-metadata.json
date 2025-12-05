@@ -1,0 +1,15 @@
+{
+  "os": "macOS-15.0.1-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.2",
+  "startedAt": "2025-12-05T20:59:03.020922Z",
+  "program": "-m src.model.tuning",
+  "git": {
+    "remote": "https://github.com/jjedra4/stock-dashboard.git",
+    "commit": "c814c723c1e3b4c8c4c1869bfab79c4aad71bdbd"
+  },
+  "email": "jan.batman4@gmail.com",
+  "root": "/Users/brader/Desktop/stock-dashboard",
+  "host": "Jans-MacBook-Air.local",
+  "executable": "/Users/brader/Desktop/stock-dashboard/venv/bin/python",
+  "writerId": "6vvrl5b37c034w2afcf13rkvhn7ogu8q"
+}

@@ -1,0 +1,12 @@
+{"time":"2025-12-05T22:01:27.16393+01:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-05T22:01:27.44603+01:00","level":"INFO","msg":"stream: created new stream","id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:27.446073+01:00","level":"INFO","msg":"handler: started","stream_id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:27.446252+01:00","level":"INFO","msg":"writer: started","stream_id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:27.446261+01:00","level":"INFO","msg":"stream: started","id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:27.446263+01:00","level":"INFO","msg":"sender: started","stream_id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:29.67915+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-12-05T22:01:29.989476+01:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-12-05T22:01:29.995712+01:00","level":"INFO","msg":"stream: closing","id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:29.995747+01:00","level":"INFO","msg":"handler: closed","stream_id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:29.995911+01:00","level":"INFO","msg":"sender: closed","stream_id":"mx77ta7s"}
+{"time":"2025-12-05T22:01:29.995936+01:00","level":"INFO","msg":"stream: closed","id":"mx77ta7s"}
