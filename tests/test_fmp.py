@@ -4,7 +4,7 @@ import pandas as pd
 from src.data.fmp import FMPClient
 
 @pytest.fixture
-def mock_env_api_key(monkeypatch):
+def mock_env_api_key(monkeypatch): # mock env variables
     monkeypatch.setenv("FMP_API_KEY", "test_key")
 
 def test_init_without_api_key(monkeypatch):
@@ -70,8 +70,10 @@ def test_get_historical_price_success(mock_get, mock_env_api_key):
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 2
     assert "date" in df.columns
-    assert pd.api.types.is_datetime64_any_dtype(df["date"])
+    # df['date'] is now a string (object), not datetime64, due to Supabase compatibility change
+    assert df["date"].dtype == "object"
     # Check if sorted by date (FMP returns desc, our code sorts asc)
+    # String comparison works for ISO dates ("2023-10-26" < "2023-10-27")
     assert df.iloc[0]["date"] < df.iloc[1]["date"]
     
     # Verify API call parameters

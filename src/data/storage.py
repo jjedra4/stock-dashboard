@@ -43,11 +43,4 @@ class SupabaseStorage:
         return None
 
 if __name__ == "__main__":
-    load_dotenv()
-    storage = SupabaseStorage()
-    df = pd.DataFrame({
-        "ticker": ["NVDA"],
-        "date": ["2025-01-02"],
-        "price": [110.0]
-    })
-    storage.upsert_stock_data(df)
+    pass
