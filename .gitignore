@@ -17,3 +17,5 @@ model/logs.log
 .vscode/
 .idea/
 
+data/cache/
+

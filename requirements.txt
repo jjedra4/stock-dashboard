@@ -11,3 +11,6 @@ prefect
 streamlit
 pydantic
 pytest
+xgboost
+lightgbm
+torch
