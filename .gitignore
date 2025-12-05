@@ -19,3 +19,4 @@ model/logs.log
 
 data/cache/
 
+wandb/
