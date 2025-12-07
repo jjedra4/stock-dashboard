@@ -1,3 +1,4 @@
+
 pandas
 numpy
 scikit-learn
@@ -15,3 +16,4 @@ lightgbm
 torch
 optuna
 wandb
+plotly

@@ -10,205 +10,221 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="Stock Prediction Dashboard", layout="wide")
+st.set_page_config(page_title="Stock Peer Analysis", layout="wide")
+
+# Force Dark Theme CSS (Optional, Streamlit detects system theme usually)
+# But we can hint users to switch to dark theme in settings or inject CSS.
+# For now, we rely on Streamlit's theming.
 
 # --- Helper Functions ---
 @st.cache_data(ttl=3600) # Cache for 1 hour
-def load_data(ticker):
+def load_data(tickers: list):
     storage = SupabaseStorage()
-    # Fetch price history
-    # We need a method to fetch all or range. Using internal client for now if loader doesn't support range query efficiently
-    # Or better, use the storage client directly
-    response = storage.client.table("stock_prices").select("*").eq("ticker", ticker).order("date", desc=False).execute()
-    df_prices = pd.DataFrame(response.data)
+    all_prices = []
+    all_preds = []
     
-    if not df_prices.empty:
-        df_prices['date'] = pd.to_datetime(df_prices['date'])
+    for ticker in tickers:
+        # Fetch latest prices first (desc=True) then sort
+        # Limit 5000 ensures ~20 years of history
+        response = storage.client.table("stock_prices")\
+            .select("*")\
+            .eq("ticker", ticker)\
+            .order("date", desc=True)\
+            .limit(5000)\
+            .execute()
+            
+        df = pd.DataFrame(response.data)
+        if not df.empty:
+            df['date'] = pd.to_datetime(df['date'])
+            # Ensure tz-naive
+            if df['date'].dt.tz is not None:
+                df['date'] = df['date'].dt.tz_localize(None)
+            # Sort ascending for charting
+            df = df.sort_values('date')
+            all_prices.append(df)
+            
+        # Fetch predictions
+        response_pred = storage.client.table("predictions")\
+            .select("*")\
+            .eq("ticker", ticker)\
+            .order("date", desc=True)\
+            .limit(1000)\
+            .execute()
+            
+        df_p = pd.DataFrame(response_pred.data)
+        if not df_p.empty:
+            df_p['date'] = pd.to_datetime(df_p['date'])
+            if df_p['date'].dt.tz is not None:
+                df_p['date'] = df_p['date'].dt.tz_localize(None)
+            df_p = df_p.sort_values('date')
+            all_preds.append(df_p)
+            
+    if all_prices:
+        df_prices = pd.concat(all_prices)
+    else:
+        df_prices = pd.DataFrame()
         
-    # Fetch predictions
-    response_pred = storage.client.table("predictions").select("*").eq("ticker", ticker).order("date", desc=False).execute()
-    df_preds = pd.DataFrame(response_pred.data)
-    
-    if not df_preds.empty:
-        df_preds['date'] = pd.to_datetime(df_preds['date'])
+    if all_preds:
+        df_preds = pd.concat(all_preds)
+    else:
+        df_preds = pd.DataFrame()
         
     return df_prices, df_preds
 
-def calculate_metrics(df_prices, df_preds):
-    if df_prices.empty or df_preds.empty:
-        return {}
+def normalize_prices(df, start_date):
+    # Normalize to 1.0 at start_date
+    # For each ticker, find the price at start_date (or closest after)
+    df_norm = df.copy()
+    df_norm['normalized_price'] = np.nan
     
-    # Merge on date to compare
-    # Prediction on date T is for return at T+1 usually, or T?
-    # In daily_ingest.py: date=now(), predicted_log_return=next_day_return
-    # So prediction made on 2023-01-01 is for close of 2023-01-02 (approx)
-    # Let's align: Prediction Date is the date it was MADE.
-    # We want to compare Prediction(T) with Actual Return (T -> T+1)
-    
-    merged = pd.merge(df_preds, df_prices, on="ticker", suffixes=('_pred', '_actual'))
-    # We need to match prediction date with the price date
-    # Actually, let's look at how we save:
-    # date = datetime.now() -> This is "today"
-    # predicted_log_return -> "tomorrow" return
-    
-    # So we join df_preds['date'] with df_prices['date'] to get Price_T
-    merged = pd.merge(df_preds, df_prices, left_on="date", right_on="date", how="inner")
-    
-    # Now we need Price_T+1 to calculate actual return
-    merged['next_close'] = merged['close'].shift(-1) # This assumes merged is sorted by date?
-    # Wait, we can't shift on merged if it has gaps. Better to use full price history for shifts.
-    
-    # Better approach: Calculate actual returns in df_prices first
-    df_prices = df_prices.sort_values('date')
-    df_prices['actual_log_ret'] = np.log(df_prices['close'].shift(-1) / df_prices['close'])
-    df_prices['actual_pct_change'] = df_prices['close'].shift(-1) / df_prices['close'] - 1
-    
-    # Now merge prediction with this
-    comparison = pd.merge(df_preds, df_prices[['date', 'actual_log_ret', 'actual_pct_change', 'close']], on='date', how='inner')
-    comparison = comparison.dropna()
-    
-    if comparison.empty:
-        return {}
-        
-    # Metrics
-    mae = np.mean(np.abs(comparison['predicted_log_return'] - comparison['actual_log_ret']))
-    rmse = np.sqrt(np.mean((comparison['predicted_log_return'] - comparison['actual_log_ret'])**2))
-    
-    # Directional Accuracy
-    pred_dir = np.sign(comparison['predicted_log_return'])
-    actual_dir = np.sign(comparison['actual_log_ret'])
-    da = np.mean(pred_dir == actual_dir)
-    
-    return {
-        "MAE": mae,
-        "RMSE": rmse,
-        "Directional Accuracy": da,
-        "Count": len(comparison)
-    }
+    for ticker in df['ticker'].unique():
+        mask = df['ticker'] == ticker
+        ticker_data = df[mask]
+        # Find base price
+        base_data = ticker_data[ticker_data['date'] >= start_date]
+        if not base_data.empty:
+            base_price = base_data.iloc[0]['close']
+            df_norm.loc[mask, 'normalized_price'] = ticker_data['close'] / base_price
+            
+    return df_norm
 
 # --- Sidebar ---
-st.sidebar.title("Settings")
-ticker = st.sidebar.selectbox("Select Ticker", ["NVDA", "AAPL", "TSLA", "MSFT"], index=0)
+st.title("🔍 Stock peer analysis")
+st.markdown("Easily compare stocks against others in their peer group.")
 
-time_range = st.sidebar.selectbox("Time Range", ["1 Week", "1 Month", "3 Months", "1 Year", "All"], index=3)
+# Layout similar to image: Left column controls, Right column chart
+col_controls, col_chart = st.columns([1, 3])
 
-# --- Main Content ---
-st.title(f"📈 {ticker} Stock Dashboard")
+with col_controls:
+    st.subheader("Stock tickers")
+    # Multiselect with default peers
+    selected_tickers = st.multiselect(
+        "Select tickers",
+        options=["NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META"],
+        default=["NVDA", "AAPL", "MSFT"],
+        label_visibility="collapsed"
+    )
+    
+    st.subheader("Time horizon")
+    # Pills for time range
+    # Using radio as fallback if pills not available, but pills preferred
+    try:
+        time_range = st.pills(
+            "Time horizon",
+            options=["1 Month", "3 Months", "6 Months", "1 Year", "5 Years", "10 Years", "All"],
+            default="1 Year",
+            label_visibility="collapsed"
+        )
+    except AttributeError:
+        time_range = st.radio(
+            "Time horizon",
+            options=["1 Month", "3 Months", "6 Months", "1 Year", "5 Years", "10 Years", "All"],
+            index=3,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
 
-# Load Data
-with st.spinner("Loading data..."):
-    df_prices, df_preds = load_data(ticker)
-
-if df_prices.empty:
-    st.error(f"No data found for {ticker}")
+    # Best/Worst Stock Logic (computed after loading data)
+    st.markdown("---")
+    
+# --- Data Loading ---
+if not selected_tickers:
+    st.warning("Please select at least one ticker.")
 else:
-    # Filter by Date
-    max_date = df_prices['date'].max()
-    if time_range == "1 Week":
-        start_date = max_date - timedelta(weeks=1)
-    elif time_range == "1 Month":
-        start_date = max_date - timedelta(days=30)
-    elif time_range == "3 Months":
-        start_date = max_date - timedelta(days=90)
-    elif time_range == "1 Year":
-        start_date = max_date - timedelta(days=365)
-    else:
-        start_date = df_prices['date'].min()
-        
-    df_display = df_prices[df_prices['date'] >= start_date]
-    
-    # --- Chart ---
-    st.subheader("Price History & Predictions")
-    
-    fig = go.Figure()
-    
-    # Candlestick
-    fig.add_trace(go.Candlestick(
-        x=df_display['date'],
-        open=df_display['open'],
-        high=df_display['high'],
-        low=df_display['low'],
-        close=df_display['close'],
-        name="Price"
-    ))
-    
-    # Predictions Overlay (Arrows? or Dots?)
-    # Let's plot recent predictions. 
-    # If we have a prediction on date T, it predicts movement for T+1.
-    # Let's calculate "Predicted Price" = Price_T * exp(pred_ret)
-    if not df_preds.empty:
-        pred_display = df_preds[df_preds['date'] >= start_date]
-        merged_pred = pd.merge(pred_display, df_display[['date', 'close']], on='date', how='inner')
-        
-        if not merged_pred.empty:
-            merged_pred['predicted_next_close'] = merged_pred['close'] * np.exp(merged_pred['predicted_log_return'])
-            # Shift x axis by 1 day for visualization? 
-            # Actually, let's just plot a marker at T indicating UP/DOWN or the target price
-            
-            # Up arrows
-            up_preds = merged_pred[merged_pred['predicted_log_return'] > 0]
-            fig.add_trace(go.Scatter(
-                x=up_preds['date'], 
-                y=up_preds['close'],
-                mode='markers',
-                marker=dict(symbol='triangle-up', size=10, color='green'),
-                name="Predict Up"
-            ))
-            
-            # Down arrows
-            down_preds = merged_pred[merged_pred['predicted_log_return'] < 0]
-            fig.add_trace(go.Scatter(
-                x=down_preds['date'], 
-                y=down_preds['close'],
-                mode='markers',
-                marker=dict(symbol='triangle-down', size=10, color='red'),
-                name="Predict Down"
-            ))
+    with st.spinner("Loading data..."):
+        df_prices, df_preds = load_data(selected_tickers)
 
-    fig.update_layout(xaxis_rangeslider_visible=False, height=600)
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # --- Latest Prediction ---
-    st.subheader("Latest Prediction")
-    if not df_preds.empty:
-        latest_pred = df_preds.iloc[-1]
-        pred_date = latest_pred['date']
-        
-        # Check if it's fresh (made today or yesterday)
-        is_fresh = (datetime.now() - pred_date).days <= 3 # Allow weekend gaps
-        
-    col1, col2, col3 = st.columns(3)
-        col1.metric("Prediction Date", pred_date.strftime("%Y-%m-%d"))
-        col2.metric("Predicted Return", f"{latest_pred['predicted_pct_change']*100:.2f}%", delta_color="normal")
-        
-        direction = "Bullish 🟢" if latest_pred['predicted_log_return'] > 0 else "Bearish 🔴"
-        col3.metric("Signal", direction)
-        
-        if not is_fresh:
-            st.warning("⚠️ Latest prediction is old. Model might not be running.")
-else:
-        st.info("No predictions available yet.")
-
-    # --- Model Stats ---
-    st.subheader("Model Performance (Backtest)")
-    metrics = calculate_metrics(df_prices, df_preds)
-    
-    if metrics:
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Directional Accuracy", f"{metrics['Directional Accuracy']*100:.1f}%")
-        m2.metric("RMSE (Log Ret)", f"{metrics['RMSE']:.5f}")
-        m3.metric("MAE (Log Ret)", f"{metrics['MAE']:.5f}")
-        m4.metric("Evaluated Predictions", metrics['Count'])
-        
-        # Detailed Table
-        with st.expander("View Prediction History"):
-            # Re-create comparison df for display
-            df_prices_sorted = df_prices.sort_values('date')
-            df_prices_sorted['actual_log_ret'] = np.log(df_prices_sorted['close'].shift(-1) / df_prices_sorted['close'])
-            comparison = pd.merge(df_preds, df_prices_sorted[['date', 'actual_log_ret', 'close']], on='date', how='inner')
-            comparison['error'] = comparison['predicted_log_return'] - comparison['actual_log_ret']
-            comparison['correct_dir'] = np.sign(comparison['predicted_log_return']) == np.sign(comparison['actual_log_ret'])
-            
-            st.dataframe(comparison.sort_values('date', ascending=False))
+    if df_prices.empty:
+        st.error("No data found.")
     else:
-        st.info("Not enough data to calculate accuracy (need actuals for next day).")
+        # Filter Date Range
+        max_date = df_prices['date'].max()
+        
+        delta_map = {
+            "1 Month": timedelta(days=30),
+            "3 Months": timedelta(days=90),
+            "6 Months": timedelta(days=180),
+            "1 Year": timedelta(days=365),
+            "5 Years": timedelta(days=365*5),
+            "10 Years": timedelta(days=365*10),
+            "All": None
+        }
+        
+        if delta_map.get(time_range):
+            start_date = max_date - delta_map[time_range]
+        else:
+            start_date = df_prices['date'].min()
+            
+        df_display = df_prices[df_prices['date'] >= start_date].copy()
+        
+        # Normalize
+        df_display = normalize_prices(df_display, start_date)
+        
+        # Calculate Performance for Best/Worst
+        perf_stats = []
+        for t in selected_tickers:
+            t_data = df_display[df_display['ticker'] == t]
+            if not t_data.empty:
+                start_price = t_data.iloc[0]['close']
+                end_price = t_data.iloc[-1]['close']
+                pct_change = (end_price - start_price) / start_price
+                perf_stats.append({"ticker": t, "change": pct_change})
+        
+        if perf_stats:
+            best_stock = max(perf_stats, key=lambda x: x['change'])
+            worst_stock = min(perf_stats, key=lambda x: x['change'])
+            
+            with col_controls:
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.markdown("**Best stock**")
+                    st.metric(best_stock['ticker'], f"↑ {best_stock['change']*100:.0f}%", label_visibility="collapsed")
+                with c2:
+                    st.markdown("**Worst stock**")
+                    st.metric(worst_stock['ticker'], f"↑ {worst_stock['change']*100:.0f}%" if worst_stock['change']>0 else f"↓ {abs(worst_stock['change'])*100:.0f}%", 
+                              delta_color="normal" if worst_stock['change']>0 else "inverse", label_visibility="collapsed")
+
+        # --- Chart ---
+        with col_chart:
+            fig = go.Figure()
+            
+            # Plot each ticker
+            for t in selected_tickers:
+                t_data = df_display[df_display['ticker'] == t]
+                fig.add_trace(go.Scatter(
+                    x=t_data['date'],
+                    y=t_data['normalized_price'],
+                    mode='lines',
+                    name=t
+                ))
+                
+            fig.update_layout(
+                title="Normalized price",
+                yaxis_title="Normalized price",
+                xaxis_title="Date",
+                height=600,
+                hovermode="x unified",
+                legend=dict(title="Stock"),
+                template="plotly_dark" # Matches the dark theme request
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    # --- Prediction Section (Below Chart) ---
+    st.subheader("Latest Predictions")
+    if not df_preds.empty:
+        latest_preds = []
+        for t in selected_tickers:
+            t_pred = df_preds[df_preds['ticker'] == t]
+            if not t_pred.empty:
+                latest = t_pred.iloc[-1]
+                latest_preds.append({
+                    "Ticker": t,
+                    "Date": latest['date'].strftime("%Y-%m-%d"),
+                    "Predicted Return": f"{latest['predicted_pct_change']*100:.2f}%",
+                    "Signal": "Bullish 🟢" if latest['predicted_log_return'] > 0 else "Bearish 🔴"
+                })
+        
+        if latest_preds:
+            st.dataframe(pd.DataFrame(latest_preds), hide_index=True)
+    else:
+        st.info("No predictions found for selected stocks.")
