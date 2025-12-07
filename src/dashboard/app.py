@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
+import altair as alt
 from datetime import datetime, timedelta
 import numpy as np
 from src.data.storage import SupabaseStorage
@@ -10,11 +10,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="Stock Peer Analysis", layout="wide")
+st.set_page_config(
+    page_title="Stock peer analysis dashboard",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide",
+)
 
-# Force Dark Theme CSS (Optional, Streamlit detects system theme usually)
-# But we can hint users to switch to dark theme in settings or inject CSS.
-# For now, we rely on Streamlit's theming.
+"""
+# :material/query_stats: Stock peer analysis
+
+Easily compare stocks against others in their peer group.
+"""
+
+""  # Add some space.
 
 # --- Helper Functions ---
 @st.cache_data(ttl=3600) # Cache for 1 hour
@@ -25,12 +33,12 @@ def load_data(tickers: list):
     
     for ticker in tickers:
         # Fetch latest prices first (desc=True) then sort
-        # Limit 5000 ensures ~20 years of history
+        # Limit 8000 ensures ~30 years of history (252 * 30 = 7560)
         response = storage.client.table("stock_prices")\
             .select("*")\
             .eq("ticker", ticker)\
             .order("date", desc=True)\
-            .limit(5000)\
+            .limit(8000)\
             .execute()
             
         df = pd.DataFrame(response.data)
@@ -88,143 +96,160 @@ def normalize_prices(df, start_date):
             
     return df_norm
 
-# --- Sidebar ---
-st.title("🔍 Stock peer analysis")
-st.markdown("Easily compare stocks against others in their peer group.")
+# --- Layout ---
+cols = st.columns([1, 3])
 
-# Layout similar to image: Left column controls, Right column chart
-col_controls, col_chart = st.columns([1, 3])
+# --- Sidebar / Left Column ---
+top_left_cell = cols[0].container(
+    border=True, height="stretch", vertical_alignment="center"
+)
 
-with col_controls:
-    st.subheader("Stock tickers")
-    # Multiselect with default peers
+DEFAULT_STOCKS = ["NVDA", "AAPL", "MSFT"]
+ALL_STOCKS = ["NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META"]
+
+with top_left_cell:
+    # Selectbox for stock tickers
     selected_tickers = st.multiselect(
-        "Select tickers",
-        options=["NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META"],
-        default=["NVDA", "AAPL", "MSFT"],
-        label_visibility="collapsed"
+        "Stock tickers",
+        options=ALL_STOCKS,
+        default=DEFAULT_STOCKS,
+        placeholder="Choose stocks to compare. Example: NVDA",
     )
-    
-    st.subheader("Time horizon")
+
+# Time horizon selector
+horizon_map = {
+    "1 Month": timedelta(days=30),
+    "3 Months": timedelta(days=90),
+    "6 Months": timedelta(days=180),
+    "1 Year": timedelta(days=365),
+    "5 Years": timedelta(days=365*5),
+    "10 Years": timedelta(days=365*10),
+    "All": None
+}
+
+with top_left_cell:
     # Pills for time range
-    # Using radio as fallback if pills not available, but pills preferred
     try:
-        time_range = st.pills(
+        horizon = st.pills(
             "Time horizon",
-            options=["1 Month", "3 Months", "6 Months", "1 Year", "5 Years", "10 Years", "All"],
+            options=list(horizon_map.keys()),
             default="1 Year",
-            label_visibility="collapsed"
         )
     except AttributeError:
-        time_range = st.radio(
+        horizon = st.radio(
             "Time horizon",
-            options=["1 Month", "3 Months", "6 Months", "1 Year", "5 Years", "10 Years", "All"],
+            options=list(horizon_map.keys()),
             index=3,
             horizontal=True,
-            label_visibility="collapsed"
         )
 
-    # Best/Worst Stock Logic (computed after loading data)
-    st.markdown("---")
-    
-# --- Data Loading ---
 if not selected_tickers:
-    st.warning("Please select at least one ticker.")
+    top_left_cell.info("Pick some stocks to compare", icon=":material/info:")
+    st.stop()
+
+# --- Main Content / Right Column ---
+right_cell = cols[1].container(
+    border=True, height="stretch", vertical_alignment="center"
+)
+
+# Load data
+with st.spinner("Loading data..."):
+    df_prices, df_preds = load_data(selected_tickers)
+
+if df_prices.empty:
+    st.error("No data found.")
+    st.stop()
+
+# Filter Date Range
+max_date = df_prices['date'].max()
+if horizon_map[horizon]:
+    start_date = max_date - horizon_map[horizon]
 else:
-    with st.spinner("Loading data..."):
-        df_prices, df_preds = load_data(selected_tickers)
+    start_date = df_prices['date'].min()
 
-    if df_prices.empty:
-        st.error("No data found.")
-    else:
-        # Filter Date Range
-        max_date = df_prices['date'].max()
-        
-        delta_map = {
-            "1 Month": timedelta(days=30),
-            "3 Months": timedelta(days=90),
-            "6 Months": timedelta(days=180),
-            "1 Year": timedelta(days=365),
-            "5 Years": timedelta(days=365*5),
-            "10 Years": timedelta(days=365*10),
-            "All": None
-        }
-        
-        if delta_map.get(time_range):
-            start_date = max_date - delta_map[time_range]
-        else:
-            start_date = df_prices['date'].min()
-            
-        df_display = df_prices[df_prices['date'] >= start_date].copy()
-        
-        # Normalize
-        df_display = normalize_prices(df_display, start_date)
-        
-        # Calculate Performance for Best/Worst
-        perf_stats = []
-        for t in selected_tickers:
-            t_data = df_display[df_display['ticker'] == t]
-            if not t_data.empty:
-                start_price = t_data.iloc[0]['close']
-                end_price = t_data.iloc[-1]['close']
-                pct_change = (end_price - start_price) / start_price
-                perf_stats.append({"ticker": t, "change": pct_change})
-        
-        if perf_stats:
-            best_stock = max(perf_stats, key=lambda x: x['change'])
-            worst_stock = min(perf_stats, key=lambda x: x['change'])
-            
-            with col_controls:
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.markdown("**Best stock**")
-                    st.metric(best_stock['ticker'], f"↑ {best_stock['change']*100:.0f}%", label_visibility="collapsed")
-                with c2:
-                    st.markdown("**Worst stock**")
-                    st.metric(worst_stock['ticker'], f"↑ {worst_stock['change']*100:.0f}%" if worst_stock['change']>0 else f"↓ {abs(worst_stock['change'])*100:.0f}%", 
-                              delta_color="normal" if worst_stock['change']>0 else "inverse", label_visibility="collapsed")
+df_display = df_prices[df_prices['date'] >= start_date].copy()
 
-        # --- Chart ---
-        with col_chart:
-            fig = go.Figure()
-            
-            # Plot each ticker
-            for t in selected_tickers:
-                t_data = df_display[df_display['ticker'] == t]
-                fig.add_trace(go.Scatter(
-                    x=t_data['date'],
-                    y=t_data['normalized_price'],
-                    mode='lines',
-                    name=t
-                ))
-                
-            fig.update_layout(
-                title="Normalized price",
-                yaxis_title="Normalized price",
-                xaxis_title="Date",
-                height=600,
-                hovermode="x unified",
-                legend=dict(title="Stock"),
-                template="plotly_dark" # Matches the dark theme request
-            )
-            st.plotly_chart(fig, use_container_width=True)
+# Normalize
+df_display = normalize_prices(df_display, start_date)
 
-    # --- Prediction Section (Below Chart) ---
-    st.subheader("Latest Predictions")
-    if not df_preds.empty:
-        latest_preds = []
-        for t in selected_tickers:
-            t_pred = df_preds[df_preds['ticker'] == t]
-            if not t_pred.empty:
-                latest = t_pred.iloc[-1]
-                latest_preds.append({
-                    "Ticker": t,
-                    "Date": latest['date'].strftime("%Y-%m-%d"),
-                    "Predicted Return": f"{latest['predicted_pct_change']*100:.2f}%",
-                    "Signal": "Bullish 🟢" if latest['predicted_log_return'] > 0 else "Bearish 🔴"
-                })
+# Calculate Best/Worst
+perf_stats = []
+for t in selected_tickers:
+    t_data = df_display[df_display['ticker'] == t]
+    if not t_data.empty:
+        start_price = t_data.iloc[0]['close']
+        end_price = t_data.iloc[-1]['close']
+        pct_change = (end_price - start_price) / start_price
+        perf_stats.append({"ticker": t, "change": pct_change})
+
+bottom_left_cell = cols[0].container(
+    border=True, height="stretch", vertical_alignment="center"
+)
+
+with bottom_left_cell:
+    if perf_stats:
+        best_stock = max(perf_stats, key=lambda x: x['change'])
+        worst_stock = min(perf_stats, key=lambda x: x['change'])
         
-        if latest_preds:
-            st.dataframe(pd.DataFrame(latest_preds), hide_index=True)
-    else:
-        st.info("No predictions found for selected stocks.")
+        metric_cols = st.columns(2)
+        metric_cols[0].metric(
+            "Best stock",
+            best_stock['ticker'],
+            delta=f"{round(best_stock['change']*100)}%",
+            width="content",
+        )
+        metric_cols[1].metric(
+            "Worst stock",
+            worst_stock['ticker'],
+            delta=f"{round(worst_stock['change']*100)}%",
+            width="content",
+        )
+
+# Plot normalized prices using Altair
+with right_cell:
+    # Prepare data for Altair (melt is handled by our structure, strictly speaking df_display is already long format with 'ticker' column)
+    # We just need to rename columns to match standard expectation if needed, but 'ticker' works as color.
+    
+    chart_data = df_display[['date', 'ticker', 'normalized_price']].rename(columns={
+        'date': 'Date', 
+        'ticker': 'Stock', 
+        'normalized_price': 'Normalized price'
+    })
+    
+    st.altair_chart(
+        alt.Chart(chart_data)
+        .mark_line()
+        .encode(
+            alt.X("Date:T"),
+            alt.Y("Normalized price:Q").scale(zero=False),
+            alt.Color("Stock:N"),
+            tooltip=["Date", "Stock", "Normalized price"]
+        )
+        .properties(height=400)
+        .interactive(), # Enables zoom/pan
+        use_container_width=True
+    )
+
+""
+""
+
+# --- Predictions Section ---
+st.subheader("Latest Predictions")
+
+if not df_preds.empty:
+    latest_preds = []
+    for t in selected_tickers:
+        t_pred = df_preds[df_preds['ticker'] == t]
+        if not t_pred.empty:
+            latest = t_pred.iloc[-1]
+            latest_preds.append({
+                "Ticker": t,
+                "Date": latest['date'].strftime("%Y-%m-%d"),
+                "Predicted Return": f"{latest['predicted_pct_change']*100:.2f}%",
+                "Signal": "Bullish 🟢" if latest['predicted_log_return'] > 0 else "Bearish 🔴"
+            })
+    
+    if latest_preds:
+        st.dataframe(pd.DataFrame(latest_preds), hide_index=True)
+else:
+    st.info("No predictions found for selected stocks.")

@@ -6,35 +6,17 @@ from src.data.fmp import FMPClient
 from src.data.storage import SupabaseStorage
 from src.model.train import train_final_model
 from src.model.predict import load_model, make_predictions
-from src.data.loader import get_training_data
+from src.data.loader import get_training_data, update_stock_data
 
 @task(retries=3)
 def fetch_and_save_data(ticker: str):
     """
     Fetches latest data from FMP and updates Supabase.
-    Logic is similar to get_training_data but ensures DB is up to date first.
+    Delegates to src.data.loader.update_stock_data for core logic.
     """
     print(f"Fetching latest data for {ticker}...")
-    client = FMPClient()
-    storage = SupabaseStorage()
-    
-    # Get latest date from DB to only fetch new data
-    latest_date_str = storage.get_latest_date(ticker)
-    from_date = latest_date_str if latest_date_str else (datetime.now() - pd.Timedelta(days=365*10)).strftime("%Y-%m-%d")
-    
-    # Fetch new data
-    df_new = client.get_historical_price(ticker, from_date=from_date)
-    
-    if df_new.empty:
-        print("No new data found.")
-        return
-    
-    # Save to DB
-    if 'ticker' not in df_new.columns:
-        df_new['ticker'] = ticker
-        
-    storage.upsert_stock_data(df_new, table_name="stock_prices")
-    print(f"Saved {len(df_new)} new rows for {ticker}")
+    rows_added = update_stock_data(ticker)
+    print(f"Saved {rows_added} new rows for {ticker}")
 
 @task
 def retrain_model(ticker: str):
@@ -118,5 +100,6 @@ def daily_ingest_flow(tickers: list = ["NVDA"]):
         predict_next_day(ticker)
 
 if __name__ == "__main__":
-    daily_ingest_flow()
+    tickers = ["NVDA", "AMD", "INTC", "QCOM", "MSFT", "AAPL", "GOOG", "META", "AMZN", "TSLA"]
+    daily_ingest_flow(tickers=tickers)
 

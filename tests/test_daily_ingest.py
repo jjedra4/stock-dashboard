@@ -12,31 +12,20 @@ def prefect_test_fixture():
 
 class TestDailyIngestFlow:
     
-    @patch("flows.daily_ingest.FMPClient")
-    @patch("flows.daily_ingest.SupabaseStorage")
-    def test_fetch_and_save_data_fn(self, mock_storage_cls, mock_fmp_cls):
+    @patch("flows.daily_ingest.update_stock_data")
+    def test_fetch_and_save_data_fn(self, mock_update_stock_data):
         """
         Unit test for the underlying function of fetch_and_save_data task.
+        Updated to reflect delegation to src.data.loader.update_stock_data.
         """
-        # Mock dependencies
-        mock_fmp = MagicMock()
-        mock_fmp_cls.return_value = mock_fmp
-        
-        mock_storage = MagicMock()
-        mock_storage_cls.return_value = mock_storage
-        mock_storage.get_latest_date.return_value = "2023-01-01"
-        
-        # Mock API response
-        mock_df = pd.DataFrame({"close": [100, 101], "date": ["2023-01-02", "2023-01-03"]})
-        mock_fmp.get_historical_price.return_value = mock_df
+        # Mock return value (rows added)
+        mock_update_stock_data.return_value = 10
         
         # Call .fn() to bypass Prefect runtime for unit testing logic
         fetch_and_save_data.fn(ticker="TEST")
         
         # Assertions
-        mock_storage.get_latest_date.assert_called_with("TEST")
-        mock_fmp.get_historical_price.assert_called()
-        mock_storage.upsert_stock_data.assert_called()
+        mock_update_stock_data.assert_called_with("TEST")
         
     @patch("flows.daily_ingest.train_final_model")
     def test_retrain_model_fn(self, mock_train):

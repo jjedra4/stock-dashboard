@@ -1,6 +1,8 @@
 import os
 import pandas as pd
+from datetime import datetime
 from src.data.storage import SupabaseStorage
+from src.data.fmp import FMPClient
 from dotenv import load_dotenv
 
 def _fetch_paginated_data(storage: SupabaseStorage, ticker: str, from_date: str = None) -> pd.DataFrame:
@@ -100,8 +102,44 @@ def get_training_data(ticker: str, cache_dir: str = "data/cache") -> pd.DataFram
         
     return df
 
+def update_stock_data(ticker: str) -> int:
+    """
+    Updates the Supabase database with the latest stock data from FMP.
+    Checks the latest date in DB and only fetches new data.
+    
+    Returns:
+        int: Number of new rows added.
+    """
+    print(f"Updating database for {ticker}...")
+    storage = SupabaseStorage()
+    client = FMPClient()
+    
+    # Get latest date from DB
+    latest_date_str = storage.get_latest_date(ticker)
+    from_date = latest_date_str if latest_date_str else (datetime.now() - pd.Timedelta(days=365*10)).strftime("%Y-%m-%d")
+    
+    # Fetch new data from FMP
+    df_new = client.get_historical_price(ticker, from_date=from_date)
+    
+    if df_new.empty:
+        print("No new data found from FMP.")
+        return 0
+        
+    # Ensure ticker column exists
+    if 'ticker' not in df_new.columns:
+        df_new['ticker'] = ticker
+    
+    # We might get the same day if we fetch from latest_date, so we should handle duplicates
+    # Upsert handles it if primary key is (ticker, date)
+    # But FMP might return 'from_date' inclusive.
+    # Let's trust upsert to handle overlap/updates.
+    
+    storage.upsert_stock_data(df_new, table_name="stock_prices")
+    print(f"Successfully upserted {len(df_new)} rows to Supabase.")
+    return len(df_new)
 
 if __name__ == "__main__":
     load_dotenv()
-    df = get_training_data("NVDA")
-    print(df.tail())
+    # df = get_training_data("NVDA")
+    # print(df.tail())
+    update_stock_data("NVDA")
