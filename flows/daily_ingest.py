@@ -100,6 +100,10 @@ def daily_ingest_flow(tickers: list = ["NVDA"]):
         predict_next_day(ticker)
 
 if __name__ == "__main__":
-    tickers = ["NVDA", "AMD", "INTC", "QCOM", "MSFT", "AAPL", "GOOG", "META", "AMZN", "TSLA"]
+    import os
+    # Load tickers from env or default to a list
+    tickers_env = os.getenv("TICKERS", "NVDA,AMD,INTC,QCOM,MSFT,AAPL,GOOG,META,AMZN,TSLA")
+    tickers = [t.strip() for t in tickers_env.split(",")]
+    
     daily_ingest_flow(tickers=tickers)
 

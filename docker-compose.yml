@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build: .
+    container_name: stock-dashboard
+    command: streamlit run src/dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    restart: always
+
+  scheduler:
+    build: .
+    container_name: stock-scheduler
+    command: python serve_flow.py
+    env_file:
+      - .env
+    environment:
+      - PREFECT_API_URL=${PREFECT_API_URL}
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    restart: always
+

@@ -58,7 +58,7 @@ def load_data(tickers: list):
             .order("date", desc=True)\
             .limit(1000)\
             .execute()
-            
+    
         df_p = pd.DataFrame(response_pred.data)
         if not df_p.empty:
             df_p['date'] = pd.to_datetime(df_p['date'])
@@ -105,7 +105,7 @@ top_left_cell = cols[0].container(
 )
 
 DEFAULT_STOCKS = ["NVDA", "AAPL", "MSFT"]
-ALL_STOCKS = ["NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META"]
+ALL_STOCKS = ["NVDA", "AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "META"]
 
 with top_left_cell:
     # Selectbox for stock tickers
@@ -227,7 +227,7 @@ with right_cell:
         )
         .properties(height=400)
         .interactive(), # Enables zoom/pan
-        use_container_width=True
+        # width=True
     )
 
 ""
