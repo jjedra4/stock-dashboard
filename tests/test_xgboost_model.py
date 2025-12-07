@@ -35,11 +35,11 @@ def test_init():
     assert model.model is None
 
 def test_prepare_data(sample_data):
-    df, y = sample_data
+    df, _ = sample_data
     model = XGBoostModel()
-    
+
     # Test with target
-    dtrain = model._prepare_data(df, y)
+    dtrain = model._prepare_data(df, train=True)
     assert isinstance(dtrain, xgb.DMatrix)
     # Check if features were generated (we expect some rows dropped due to lags)
     assert dtrain.num_row() > 0

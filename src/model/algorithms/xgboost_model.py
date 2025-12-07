@@ -80,23 +80,32 @@ class XGBoostModel(BaseModel):
 
         # F. Cyclical Time Encoding (Seasonality)
         # Assuming the index is a DatetimeIndex. If 'date' is a column, convert it first.
-        if not isinstance(df.index, pd.DatetimeIndex):
+        # Ensure we have a datetime index for these calculations
+        
+        # Keep track if we set the index so we can reset it or handle it
+        is_index_set = isinstance(df.index, pd.DatetimeIndex)
+        
+        if not is_index_set:
             # Try to find a date column if index isn't date
             for col in df.columns:
                 if 'date' in str(col).lower():
-                    df[col] = pd.to_datetime(df[col])
+                    # Check if it's already datetime
+                    if not pd.api.types.is_datetime64_any_dtype(df[col]):
+                        df[col] = pd.to_datetime(df[col])
                     df.set_index(col, inplace=True)
+                    is_index_set = True
                     break
         
-        if isinstance(df.index, pd.DatetimeIndex):
+        if is_index_set:
             # Day of week (0-6) converted to Sine/Cosine
             df['day_sin'] = np.sin(2 * np.pi * df.index.dayofweek / 7)
             df['day_cos'] = np.cos(2 * np.pi * df.index.dayofweek / 7)
             # Month (1-12) converted to Sine/Cosine
             df['month_sin'] = np.sin(2 * np.pi * df.index.month / 12)
             df['month_cos'] = np.cos(2 * np.pi * df.index.month / 12)
-
+        
         # --- CALCULATE TARGET (Before cleanup) ---
+
         df['target'] = np.log(df[price_col].shift(-1) / df[price_col])
 
         # --- CLEANUP ---
