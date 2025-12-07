@@ -196,13 +196,11 @@ with bottom_left_cell:
             "Best stock",
             best_stock['ticker'],
             delta=f"{round(best_stock['change']*100)}%",
-            width="content",
         )
         metric_cols[1].metric(
             "Worst stock",
             worst_stock['ticker'],
             delta=f"{round(worst_stock['change']*100)}%",
-            width="content",
         )
 
 # Plot normalized prices using Altair
@@ -227,7 +225,7 @@ with right_cell:
         )
         .properties(height=400)
         .interactive(), # Enables zoom/pan
-        # width=True
+        width="stretch"
     )
 
 ""

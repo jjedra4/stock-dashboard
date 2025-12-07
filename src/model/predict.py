@@ -17,8 +17,8 @@ def load_model(path: str = "model.pkl", model_type: str = "xgboost"):
     if path.endswith(".pkl"):
         with open(path, "rb") as f:
             model = pickle.load(f)
-        return model
-        
+            return model
+            
     elif path.endswith(".json"):
         if model_type == "xgboost":
             model = ModelFactory.get_model("xgboost")
@@ -66,6 +66,6 @@ if __name__ == "__main__":
         
         print("\nPredictions (Log Returns):")
         print(preds)
-        
+
     except Exception as e:
         print(f"An error occurred: {e}")

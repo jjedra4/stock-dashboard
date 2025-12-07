@@ -103,7 +103,7 @@ class XGBoostModel(BaseModel):
             # Month (1-12) converted to Sine/Cosine
             df['month_sin'] = np.sin(2 * np.pi * df.index.month / 12)
             df['month_cos'] = np.cos(2 * np.pi * df.index.month / 12)
-        
+
         # --- CALCULATE TARGET (Before cleanup) ---
 
         df['target'] = np.log(df[price_col].shift(-1) / df[price_col])

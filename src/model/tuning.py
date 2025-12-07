@@ -41,13 +41,13 @@ class HyperparameterTuner:
             reinit=True,
             job_type="optimization"
         )
-
+        
         # Ensure data is sorted by date
         if 'date' in self.data.columns:
             if not pd.api.types.is_datetime64_any_dtype(self.data['date']):
                 self.data['date'] = pd.to_datetime(self.data['date'])
             self.data = self.data.sort_values('date')
-            
+        
             # Split train/test based on date
             split_date = pd.to_datetime("2025-06-01")
             
@@ -77,9 +77,9 @@ class HyperparameterTuner:
                 # Add lookback context for prediction if needed (handled inside model or here)
                 # But since we want to evaluate pure performance on X_split:
                 preds = model.predict(X_split)
-                
+
                 price_col = 'adjClose' if 'adjClose' in X_split.columns else 'close'
-                
+            
                 # Calculate actual returns for evaluation
                 # Target is log return: ln(P_t+1 / P_t)
                 actual_returns = np.log(X_split[price_col].shift(-1) / X_split[price_col])
@@ -122,7 +122,7 @@ class HyperparameterTuner:
                 # reset index to align for correlation if needed, or just values
                 # actual_eval is a Series with index. preds_eval might have different index if created from np array
                 ic = preds_series.corr(pd.Series(actual_eval.values), method='spearman')
-                
+            
                 # 5. Sharpe Ratio (Annualized) of a simple Long/Short Strategy
                 # Strategy: Long if pred > 0, Short if pred < 0
                 # Returns = sign(pred) * actual_ret
