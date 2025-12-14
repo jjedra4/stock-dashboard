@@ -33,7 +33,7 @@ graph LR
     D -->|Predict| C
     C -->|Query| E[Streamlit Dashboard]
     E -->|Serve| F[User Browser]
-    G[AWS EventBridge] -->|Trigger 22:15 UTC (Mon-Fri)| B
+    G[AWS EventBridge] -->|"Trigger 22:15 UTC (Mon-Fri)"| B
 ```
 
 ## 🛠️ Tech Stack
