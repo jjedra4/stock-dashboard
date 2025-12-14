@@ -11,15 +11,21 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# Create user first
+RUN useradd -m appuser
 
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application files
 COPY . .
 
-EXPOSE 8501 4200
+# Change ownership to appuser
+RUN chown -R appuser:appuser /app
 
-RUN useradd -m appuser
+# Switch to user
 USER appuser
+
+EXPOSE 8501 4200
 
 CMD ["streamlit", "run", "src/dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

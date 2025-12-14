@@ -39,12 +39,23 @@ def predict_next_day(ticker: str):
     model_path = f"models/{ticker}_{date_str}_model.json"
     
     if not os.path.exists(model_path):
-        print(f"Model not found at {model_path}. Using production backup if available.")
-        # Fallback or fail? Let's try to find any recent model or fail.
-        # For now, we assume retrain_model just ran successfully.
-        return
+        print(f"Model not found at {model_path}. Checking for any model for {ticker}...")
+        # Fallback: Find most recent model for this ticker
+        import glob
+        existing_models = glob.glob(f"models/{ticker}_*_model.json")
+        if not existing_models:
+             print(f"No models found for {ticker}. Skipping prediction.")
+             return
         
-    model = load_model(model_path, model_type="xgboost")
+        # Sort by name (which includes date) to get latest
+        model_path = sorted(existing_models)[-1]
+        print(f"Using fallback model: {model_path}")
+
+    try:
+        model = load_model(model_path, model_type="xgboost")
+    except Exception as e:
+        print(f"Failed to load model {model_path}: {e}")
+        return
     
     # Get recent data for feature engineering (need ~30-50 days context)
     df = get_training_data(ticker)
@@ -61,7 +72,7 @@ def predict_next_day(ticker: str):
     if len(preds) == 0:
         print("No predictions generated.")
         return
-        
+    
     latest_pred = preds[-1]
     print(f"Predicted Log Return for next trading day: {latest_pred}")
     
@@ -88,16 +99,25 @@ def predict_next_day(ticker: str):
         print(f"Could not save prediction to DB (table might not exist): {e}")
 
 @flow(name="Daily Stock Ingest and Train")
-def daily_ingest_flow(tickers: list = ["NVDA"]):
+def daily_ingest_flow(tickers: list = ["NVDA", "AMD", "INTC", "QCOM", "MSFT", "AAPL", "GOOG", "META", "AMZN", "TSLA"]):
+    # Ensure models directory exists
+    if not os.path.exists("models"):
+        os.makedirs("models")
+
     for ticker in tickers:
-        # 1. Update Data
-        fetch_and_save_data(ticker)
-        
-        # 2. Retrain Model
-        retrain_model(ticker)
-        
-        # 3. Predict Next Day
-        predict_next_day(ticker)
+        try:
+            print(f"--- Processing {ticker} ---")
+            # 1. Update Data
+            fetch_and_save_data(ticker)
+            
+            # 2. Retrain Model
+            retrain_model(ticker)
+            
+            # 3. Predict Next Day
+            predict_next_day(ticker)
+        except Exception as e:
+            print(f"Error processing {ticker}: {e}")
+            continue
 
 if __name__ == "__main__":
     import os

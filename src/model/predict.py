@@ -17,7 +17,7 @@ def load_model(path: str = "model.pkl", model_type: str = "xgboost"):
     if path.endswith(".pkl"):
         with open(path, "rb") as f:
             model = pickle.load(f)
-            return model
+        return model
             
     elif path.endswith(".json"):
         if model_type == "xgboost":
@@ -41,7 +41,6 @@ def make_predictions(model, data: pd.DataFrame):
         # 2. Predict on DMatrix
         # This returns the raw predictions
         predictions = model.model.predict(dmat)
-        
         return predictions
     else:
         # Fallback for other model types

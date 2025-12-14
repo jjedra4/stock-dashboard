@@ -31,7 +31,7 @@ class TestLoader:
         mock_storage.get_latest_date.assert_called_with("TEST")
         mock_fmp.get_historical_price.assert_called()
         mock_storage.upsert_stock_data.assert_called()
-        
+    
         # Verify ticker was added if missing (mock_df didn't have it)
         # The upsert call receives the df. We can check arguments.
         args, _ = mock_storage.upsert_stock_data.call_args
@@ -44,7 +44,7 @@ class TestLoader:
     def test_update_stock_data_no_new_data(self, mock_storage_cls, mock_fmp_cls):
         mock_fmp = MagicMock()
         mock_fmp_cls.return_value = mock_fmp
-        
+    
         mock_storage = MagicMock()
         mock_storage_cls.return_value = mock_storage
         mock_storage.get_latest_date.return_value = "2023-01-01"
