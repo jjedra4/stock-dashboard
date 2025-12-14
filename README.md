@@ -88,5 +88,5 @@ The application is designed to be cloud-agnostic but is currently optimized for 
 
 ## 🔮 Future Improvements
 *   [ ] Add Sentiment Analysis from Financial News.
-*   [ ] Implement LSTM/Transformer models for comparison.
+*   [ ] Implement LSTM/Transformer/SSM models for comparison.
 *   [ ] Add email alerts for strong buy/sell signals.
