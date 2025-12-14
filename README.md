@@ -11,7 +11,7 @@
 A production-grade, end-to-end Machine Learning application that predicts daily stock movements. Built with a modern data stack, containerized with Docker, and deployed serverlessly on AWS ECS Fargate.
 
 ## 🚀 Live Demo
-*(Insert your Load Balancer URL or Domain here)*
+[Stock Prediction Dashboard](http://51.21.252.250:8501)
 
 ## 🎯 Project Overview
 This dashboard helps traders and analysts visualize stock performance and view AI-generated predictions for future price movements. It automates the entire ML lifecycle—from data ingestion to model training and deployment.
@@ -33,7 +33,7 @@ graph LR
     D -->|Predict| C
     C -->|Query| E[Streamlit Dashboard]
     E -->|Serve| F[User Browser]
-    G[AWS EventBridge] -->|Trigger 22:30 UTC| B
+    G[AWS EventBridge] -->|Trigger 22:15 UTC (Mon-Fri)| B
 ```
 
 ## 🛠️ Tech Stack
@@ -54,13 +54,13 @@ The core prediction engine is an **XGBoost Regressor** optimized for time-series
     *   **Technical Indicators**: VWAP Distance, Relative Volume, Candle Body Size, Shadows.
     *   **Lag Features**: 1, 2, 3, 5, 10-day lags of returns and volume.
     *   **Seasonality**: Cyclical encoding (Sine/Cosine) of Day-of-Week and Month.
-*   **Evaluation**: Trained on 20+ years of historical data; monitored using RMSE, Directional Accuracy, and Sharpe Ratio.
+*   **Evaluation**: Trained on rolling 2000 days of historical data; monitored using RMSE, Directional Accuracy, and Sharpe Ratio.
 
 ## 💻 Local Development
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/stock-dashboard.git
+    git clone https://github.com/jjedra4/stock-dashboard.git
     cd stock-dashboard
     ```
 
@@ -83,7 +83,7 @@ The core prediction engine is an **XGBoost Regressor** optimized for time-series
 The application is designed to be cloud-agnostic but is currently optimized for **AWS**.
 1.  **Containerize**: Built multi-platform images (`linux/amd64`) pushed to Amazon ECR.
 2.  **Compute**: Deployed on AWS ECS Fargate (Serverless Containers) for zero-maintenance scaling.
-3.  **Scheduling**: Amazon EventBridge triggers the ingestion container every weeknight.
+3.  **Scheduling**: Amazon EventBridge triggers the ingestion container every business day at 22:15 UTC.
 4.  **Networking**: Application Load Balancer (ALB) handles traffic and SSL termination.
 
 ## 🔮 Future Improvements
