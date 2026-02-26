@@ -11,7 +11,7 @@
 A production-grade, end-to-end Machine Learning application that predicts daily stock movements. Built with a modern data stack, containerized with Docker, and deployed serverlessly on AWS ECS Fargate.
 
 ## 🚀 Live Demo
-[Stock Prediction Dashboard](http://51.21.252.250:8501)
+[Stock Prediction Dashboard](http://51.21.252.250:8501) (STOPPED due to costs)
 
 ## 🎯 Project Overview
 This dashboard helps traders and analysts visualize stock performance and view AI-generated predictions for future price movements. It automates the entire ML lifecycle—from data ingestion to model training and deployment.
